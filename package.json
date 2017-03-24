@@ -1,0 +1,23 @@
+{
+  "name": "azure-storage-node-examples",
+  "version": "1.0.0",
+  "description": "Node Azure Storage SDK",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "azure-storage": "^2.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peterblazejewicz/azure-storage-node-examples.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/peterblazejewicz/azure-storage-node-examples/issues"
+  },
+  "homepage": "https://github.com/peterblazejewicz/azure-storage-node-examples#readme"
+}
