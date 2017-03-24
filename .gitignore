@@ -35,3 +35,6 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+# assets from download directory
+assets/download/README01.md
+assets/download/README02.md
