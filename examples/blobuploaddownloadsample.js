@@ -109,29 +109,29 @@ function uploadBlobs(sourceDirectoryPath, containerName) {
       reject(sourceDirectoryPath + ' is an invalid directory path.');
     } else {
       // Search the directory and generate a list of files to upload.
-      walk(sourceDirectoryPath, function (error, files) {
-        if (error) {
-          reject(error);
-        } else {
-          var finished = 0;
-          // generate and schedule an upload for each file
-          files.forEach(function (file) {
-            var blobName = file.replace(/^.*[\\\/]/, '');
-            blobService.createBlockBlobFromLocalFile(containerName, blobName, file, function (error) {
-              finished++;
-              if (error) {
-                reject(error);
-              } else {
-                console.log(' Blob ' + blobName + ' upload finished.');
-                if (finished === files.length) {
-                  // Wait until all workers complete and the blobs are uploaded to the server.
-                  console.log('All files uploaded');
-                  resolve(containerName);
-                }
+      listAllFiles(sourceDirectoryPath)
+      .then(function(files) {
+        var finished = 0;
+        // generate and schedule an upload for each file
+        files.forEach(function (file) {
+          var blobName = file.replace(/^.*[\\\/]/, '');
+          blobService.createBlockBlobFromLocalFile(containerName, blobName, file, function (error) {
+            finished++;
+            if (error) {
+              reject(error);
+            } else {
+              console.log(' Blob ' + blobName + ' upload finished.');
+              if (finished === files.length) {
+                // Wait until all workers complete and the blobs are uploaded to the server.
+                console.log('All files uploaded');
+                resolve(containerName);
               }
-            });
+            }
           });
-        }
+        });
+      })
+      .catch(function(error) {
+        reject(error);
       });
     }
   });
@@ -218,28 +218,48 @@ function deleteContainer (container) {
 
 // Utility function
 
-var walk = function (dir, done) {
-  var results = [];
-  fs.readdir(dir, function (err, list) {
-    if (err) return done(err);
-    var i = 0;
-    (function next() {
-      var file = list[i++];
-      if (!file) return done(null, results);
+function listDirectory(dir) {
+  return new Promise(function(resolve, reject) {
+    fs.readdir(dir, function(error, files) {
+      if(error) {
+        reject(error);
+      } else {
+        resolve(files);
+      }
+    })
+  });
+}
+
+function getFileStat(file) {
+  return new Promise(function(resolve, reject) {
+    fs.stat(file, function(error, stat) {
+      if(error) {
+        reject(error);
+      } else {
+        resolve(stat);
+      }
+    });
+  });
+}
+
+function listAllFiles(dir) {
+  return listDirectory(dir)
+  .then(function(files) {
+    return Promise.all(files.map(function(file) {
       file = dir + '/' + file;
-      fs.stat(file, function (err2, stat) {
-        if (stat && stat.isDirectory()) {
-          walk(file, function (err3, res) {
-            results = results.concat(res);
-            next();
-          });
+      return getFileStat(file)
+      .then(function(stat) {
+        if(stat.isDirectory()) {
+          return listAllFiles(file);
         } else {
-          results.push(file);
-          next();
+          return file;
         }
       });
-    })();
+    }));
+  })
+  .then(function(files) {
+    return Array.prototype.concat.apply([], files);
   });
-};
+}
 
 uploadSample();
