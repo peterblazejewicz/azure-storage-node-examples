@@ -33,15 +33,16 @@
 
 const fs = require('fs');
 const azure = require('azure-storage');
+
 const container = 'paginationsample';
 const blob = 'contsample';
-let blobs = [];
+
 const blobService = azure
   .createBlobService()
   .withFilter(new azure.ExponentialRetryPolicyFilter());
 
 // optionally set a proxy
-/*var proxy = {
+/*let proxy = {
   protocol: 'http:',
   host: '127.0.0.1',
   port: 8888
@@ -50,40 +51,37 @@ const blobService = azure
 blobService.setProxy(proxy);
 */
 
-let totalBlobsCount;
-let pageSize;
-
-let continuationSample = () => {
+let continuationSample = (container, blob) => {
   const processArguments = process.argv;
   if (processArguments.length !== 4) {
     console.log('Incorrect number of arguments. Should be: numBlobs pageSize [deleteContainer]\nT' +
         'ry: 51 10');
     process.exit(1);
   }
-  totalBlobsCount = parseInt(processArguments[2], 10);
-  pageSize = parseInt(processArguments[3], 10);
+  let totalBlobsCount = parseInt(processArguments[2], 10);
+  let pageSize = parseInt(processArguments[3], 10);
   console.log('Starting continuationSample.');
   // Create the container
-  createContainer(container).then((container) => {
-    console.log(`Created the container ${container}`);
-    console.log('Entering createBlobs.');
+  createContainer(container).then((results) => {
+    console.log(`Created the container ${results.container}`);
     // Upload blobs from text.
-    createBlobs(totalBlobsCount, () => {
-      let options = {
-        maxResults: pageSize,
-        include: 'metadata',
-        locationMode: azure.StorageUtilities.LocationMode.PRIMARY_THEN_SECONDARY
-      };
-      console.log('Entering listBlobs.');
-      // List blobs using continuation tokens.
-      listBlobs(options, null, () => {
-        // Delete the container
-        deleteContainer(container)
-        .then((container) => console.log(`Deleted the container ${container}`))
-        .catch((error) => console.error(error));
-      });
-    });
-  }).catch((error) => console.error(error));
+    console.log('Entering createBlobs.');
+    return createBlobs(results.container, blob, totalBlobsCount);
+  }).then((results) => {
+    let options = {
+      maxResults: pageSize,
+      include: 'metadata',
+      locationMode: azure.StorageUtilities.LocationMode.PRIMARY_THEN_SECONDARY
+    };
+    console.log('Entering listBlobs.');
+    // List blobs using continuation tokens.
+    return listBlobs(results.container, options);
+  }).then((results) => {
+    console.log(`Completed listing. There are ${results.blobs.length} blobs`);
+    // Delete the container
+    return deleteContainer(results.container);
+  }).then((results) => console.log(`Deleted the container ${results.container}`))
+  .catch((error) => console.error(error));
 }
 
 let createContainer = (container) => {
@@ -94,46 +92,56 @@ let createContainer = (container) => {
         console.log(error);
         reject(error);
       } else {
-        resolve(container);
+        resolve({container});
       }
     });
   });
 }
 
-let createBlobs = (currentBlobsCount, callback) => {
+let createBlobs = (container, blob, counter) => {
   // Upload totalBlobsCount blobs to the container.
-  const options = {};
-  options.metadata = {
-    'hello': 'world'
-  };
-
-  blobService.createBlockBlobFromText(container, blob + currentBlobsCount, 'blob' + currentBlobsCount, options, (error) => {
-    if (error) {
-      console.log(error);
-    } else if (currentBlobsCount > 1) {
-      createBlobs(--currentBlobsCount, callback);
-    } else {
-      console.log(' Created ' + totalBlobsCount + ' blobs.');
-      callback();
-    }
+  return new Promise((resolve, reject) => {
+    const options = {
+      metadata: {
+        'hello': 'world'
+      }
+    };
+    blobService.createBlockBlobFromText(container, blob + counter, 'blob' + counter, options, (error, result, response) => {
+      if (error) {
+        reject(error);
+      } else {
+        if (counter > 0) {
+          createBlobs(container, blob, counter - 1).then((results) => {
+            resolve(results);
+          });
+        } else {
+          resolve({container});
+        }
+      }
+    });
   });
 }
 
-let listBlobs = (options, token, callback) => {
-  blobService
-    .listBlobsSegmented(container, token, options, (error, result) => {
-      blobs
-        .push
-        .apply(blobs, result.entries);
-      var token = result.continuationToken;
-      if (token) {
-        console.log(' Received a page of results. There are ' + result.entries.length + ' blobs on this page.');
-        listBlobs(options, token, callback);
+let listBlobs = (container, options, blobs = [], token) => {
+  return new Promise((resolve, reject) => {
+    blobService.listBlobsSegmented(container, token, options, (error, result, response) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      blobs = blobs.concat(result.entries);
+      let continuationToken = result.continuationToken;
+      if (continuationToken) {
+        console.log(`Received a page of results. There are ${result.entries.length} blobs on this page.`);
+        listBlobs(container, options, blobs, continuationToken).then((results) => {
+          resolve(results);
+        });
       } else {
-        console.log(' Completed listing. There are ' + blobs.length + ' blobs');
-        callback();
+        console.log(`Current blobs: ${blobs.length}`);
+        resolve({container, blobs});
       }
     });
+  });
 }
 
 let deleteContainer = (container) => {
@@ -145,10 +153,10 @@ let deleteContainer = (container) => {
         console.log(error);
         reject(error);
       } else {
-        resolve(container);
+        resolve({container});
       }
     });
   });
 }
 
-continuationSample();
+continuationSample(container, blob);
