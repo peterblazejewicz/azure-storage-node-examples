@@ -50,9 +50,10 @@ let eventHandlersSample = () => {
   // create and delete a container with these handlers
   createContainer(container, () => {
     // Delete the container
-    deleteContainer(container, () => {
-      console.log('Ending eventHandlersSample.');
-    });
+    console.log('Ending eventHandlersSample.');
+    deleteContainer(container).then((container) => {
+      console.log('Deleted the container ' + container);
+    }).catch((error) => console.error(error));
   });
 }
 
@@ -68,16 +69,15 @@ let createContainer = (container, callback) => {
   });
 }
 
-let deleteContainer = (container, callback) => {
-  // Delete the container.
+// Delete the container.
+let deleteContainer = (container) => new Promise((resolve, reject) => {
   blobService.deleteContainer(container, (error) => {
     if (error) {
-      console.log(error);
+      reject(error);
     } else {
-      console.log('Deleted the container ' + container);
-      callback();
+      resolve(container);
     }
   });
-}
+});
 //
 eventHandlersSample();
