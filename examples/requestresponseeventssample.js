@@ -42,11 +42,11 @@ let responseReceivedHandler = (response) => {
   console.log('received response event handler called');
 };
 
-let eventHandlersSample = () => {
+let eventHandlersSample = (service, container) => {
   console.log('Starting eventHandlersSample.');
   // set the event handlers
-  blobService.on('sendingRequestEvent', sendingRequestHandler);
-  blobService.on('receivedResponseEvent', responseReceivedHandler);
+  service.on('sendingRequestEvent', sendingRequestHandler);
+  service.on('receivedResponseEvent', responseReceivedHandler);
   // create and delete a container with these handlers
   createContainer(container)
   .then((container) => {
@@ -81,4 +81,4 @@ let deleteContainer = (container) => new Promise((resolve, reject) => {
   });
 });
 //
-eventHandlersSample();
+eventHandlersSample(blobService, container);
