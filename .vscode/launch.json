@@ -27,5 +27,13 @@
             "51",
             "10"
         ]
+    }, {
+        "type": "node",
+        "request": "launch",
+        "name": "requestresponseeventssample",
+        "program": "${workspaceRoot}/examples/requestresponseeventssample.js",
+        "env": {
+            "AZURE_STORAGE_CONNECTION_STRING": ""
+        }
     }]
 }
