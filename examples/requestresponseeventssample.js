@@ -48,26 +48,27 @@ let eventHandlersSample = () => {
   blobService.on('sendingRequestEvent', sendingRequestHandler);
   blobService.on('receivedResponseEvent', responseReceivedHandler);
   // create and delete a container with these handlers
-  createContainer(container, () => {
+  createContainer(container)
+  .then((container) => {
+    console.log('Created the container ' + container);
     // Delete the container
     console.log('Ending eventHandlersSample.');
-    deleteContainer(container).then((container) => {
+    return deleteContainer(container);
+  }).then((container) => {
       console.log('Deleted the container ' + container);
-    }).catch((error) => console.error(error));
-  });
+    })
+  .catch((error) => console.error(error));
 }
-
-let createContainer = (container, callback) => {
-  // Create the container.
+// Create the container.
+let createContainer = (container) => new Promise((resolve, reject) => {
   blobService.createContainer(container, (error) => {
     if (error) {
-      console.log(error);
+      reject(error);
     } else {
-      console.log('Created the container ' + container);
-      callback();
+      resolve(container);
     }
   });
-}
+});
 
 // Delete the container.
 let deleteContainer = (container) => new Promise((resolve, reject) => {
