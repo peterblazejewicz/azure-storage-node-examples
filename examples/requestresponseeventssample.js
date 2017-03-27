@@ -17,61 +17,48 @@
 /**
 * Demonstrates how to define sendingrequest and receivedresponse event handlers.
 */
-var fs = require('fs');
-
-var azure;
-if (fs.existsSync('absolute path to azure-storage.js')) {
-  azure = require('absolute path to azure-storage');
-} else {
-  azure = require('azure-storage');
-}
-
-var container = 'sendingrequestevent3';
-
+const fs = require('fs');
+const azure = require('azure-storage');
+const container = 'sendingrequestevent3';
 // The service object which will define the event handlers
-var blobService = azure.createBlobService();
-
+const blobService = azure.createBlobService();
 // optionally set a proxy
-/*var proxy = {
+/*const proxy = {
   protocol: 'http:',
   host: '127.0.0.1',
   port: 8888
 };
-
 blobService.setProxy(proxy);
 blobService2.setProxy(proxy);
 */
-
 // the sending request event handler
-var sendingRequestHandler = function (webresource) {
+let sendingRequestHandler = (webresource) => {
   webresource.withHeader('x-ms-custom-header', 'value');
-  console.log(' sending request event handler called');
+  console.log('sending request event handler called');
 };
 
 // the response received event handler
-var responseReceivedHandler = function (response) {
-  console.log(' received response event handler called');
+let responseReceivedHandler = (response) => {
+  console.log('received response event handler called');
 };
 
-function eventHandlersSample () {
+let eventHandlersSample = () => {
   console.log('Starting eventHandlersSample.');
-
   // set the event handlers
   blobService.on('sendingRequestEvent', sendingRequestHandler);
   blobService.on('receivedResponseEvent', responseReceivedHandler);
-
   // create and delete a container with these handlers
-  createContainer(container, function () {
+  createContainer(container, () => {
     // Delete the container
-    deleteContainer(container, function () {
+    deleteContainer(container, () => {
       console.log('Ending eventHandlersSample.');
     });
   });
 }
 
-function createContainer (container, callback) {
+let createContainer = (container, callback) => {
   // Create the container.
-  blobService.createContainer(container, function (error) {
+  blobService.createContainer(container, (error) => {
     if (error) {
       console.log(error);
     } else {
@@ -81,9 +68,9 @@ function createContainer (container, callback) {
   });
 }
 
-function deleteContainer (container, callback) {
+let deleteContainer = (container, callback) => {
   // Delete the container.
-  blobService.deleteContainer(container, function (error) {
+  blobService.deleteContainer(container, (error) => {
     if (error) {
       console.log(error);
     } else {
@@ -92,5 +79,5 @@ function deleteContainer (container, callback) {
     }
   });
 }
-
+//
 eventHandlersSample();
