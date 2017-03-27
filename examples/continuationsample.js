@@ -75,7 +75,7 @@ let continuationSample = (container, blob) => {
     };
     console.log('Entering listBlobs.');
     // List blobs using continuation tokens.
-    return listAllBlobs(results.container, options);
+    return getAllBlobs(results.container, options);
   }).then((blobs) => {
     console.log(`Completed listing. There are ${blobs.length} blobs`);
     // Delete the container
@@ -122,45 +122,25 @@ let createBlobs = (container, blob, counter) => {
   });
 }
 
-let listAllBlobs = (container, options) => {
+let getAllBlobs = (container, options) => {
   const getBlobs = (continuationToken = null) => new Promise((resolve, reject) => {
     blobService.listBlobsSegmented(container, continuationToken, options, (error, result, response) => {
       if (error) {
         reject(error);
       } else {
         if (result.continuationToken) {
+          console.log(`Received a page of results. There are ${result.entries.length} blobs on this page.`);
           getBlobs(result.continuationToken).then((entries) => {
             resolve(result.entries.concat(entries));
           });
         } else {
+          console.log(`Current blobs: ${result.entries.length}`);
           resolve(result.entries);
         }
       }
     });
   });
   return getBlobs();
-}
-
-let listBlobs = (container, options, blobs = [], token) => {
-  return new Promise((resolve, reject) => {
-    blobService.listBlobsSegmented(container, token, options, (error, result, response) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      blobs = blobs.concat(result.entries);
-      let continuationToken = result.continuationToken;
-      if (continuationToken) {
-        console.log(`Received a page of results. There are ${result.entries.length} blobs on this page.`);
-        listBlobs(container, options, blobs, continuationToken).then((results) => {
-          resolve(results);
-        });
-      } else {
-        console.log(`Current blobs: ${blobs.length}`);
-        resolve({container, blobs});
-      }
-    });
-  });
 }
 
 let deleteContainer = (container) => {
