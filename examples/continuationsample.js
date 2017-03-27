@@ -75,11 +75,11 @@ let continuationSample = (container, blob) => {
     };
     console.log('Entering listBlobs.');
     // List blobs using continuation tokens.
-    return listBlobs(results.container, options);
-  }).then((results) => {
-    console.log(`Completed listing. There are ${results.blobs.length} blobs`);
+    return listAllBlobs(results.container, options);
+  }).then((blobs) => {
+    console.log(`Completed listing. There are ${blobs.length} blobs`);
     // Delete the container
-    return deleteContainer(results.container);
+    return deleteContainer(container);
   }).then((results) => console.log(`Deleted the container ${results.container}`))
   .catch((error) => console.error(error));
 }
@@ -120,6 +120,25 @@ let createBlobs = (container, blob, counter) => {
       }
     });
   });
+}
+
+let listAllBlobs = (container, options) => {
+  const getBlobs = (continuationToken = null) => new Promise((resolve, reject) => {
+    blobService.listBlobsSegmented(container, continuationToken, options, (error, result, response) => {
+      if (error) {
+        reject(error);
+      } else {
+        if (result.continuationToken) {
+          getBlobs(result.continuationToken).then((entries) => {
+            resolve(result.entries.concat(entries));
+          });
+        } else {
+          resolve(result.entries);
+        }
+      }
+    });
+  });
+  return getBlobs();
 }
 
 let listBlobs = (container, options, blobs = [], token) => {
