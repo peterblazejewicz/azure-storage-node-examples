@@ -66,27 +66,28 @@ let setRetryPolicy = (container) => {
   };
   blobService.setProxy(proxy);*/
   // Step 2: Create the container
-  createContainer(container).then((data) => {
+  createContainer(container)
+  .then((data) => {
     console.log('Container info:');
     console.log(data.result);
     console.log(`Created the container ${data.container}`);
     // Step 3: Fetch attributes from the container using
     // LocationMode.SECONDARY_THEN_PRIMARY
-    fetchAttributesContainer(container).then((container) => {
-      console.log(`Downloaded container properties from ${container}`);
-      // Step 4: Lease the container
-      leaseContainer(container).then((data) => {
-        console.log(`Acquired lease from ${data.container} with leaseid ${data.result.id}`);
-        // Step 5: Lease the container again, retrying until it succeeds
-        leaseContainer(container).then((data) => {
-          // Step 6: Delete the container
-          deleteContainer(container).then((container) => {
-            console.log('Deleted the container ' + container);
-            console.log('Ending continuationSample.');
-          }).catch((error) => console.error(error));
-        }).catch((error) => console.error(error));
-      }).catch((error) => console.error(error));
-    }).catch((error) => console.error(error));
+    return fetchAttributesContainer(data.container);
+  }).then((container) => {
+    console.log(`Downloaded container properties from ${container}`);
+    // Step 4: Lease the container
+    return leaseContainer(container);
+  }).then((data) => {
+    console.log(`Acquired lease from ${data.container} with leaseid ${data.result.id}`);
+    // Step 5: Lease the container again, retrying until it succeeds
+    return leaseContainer(data.container);
+  }).then((data) => {
+    // Step 6: Delete the container
+    return deleteContainer(container);
+  }).then((container) => {
+    console.log('Deleted the container ' + container);
+    console.log('Ending continuationSample.');
   }).catch((error) => console.error(error));
 }
 
@@ -164,8 +165,7 @@ function deleteContainer(container) {
       });
     });
   };
-  return serviceBreakLease(container)
-  .then((container) => {
+  return serviceBreakLease(container).then((container) => {
     console.log(' Broke the lease on the container ' + container);
     return serviceDeleteContainer(container);
   });
