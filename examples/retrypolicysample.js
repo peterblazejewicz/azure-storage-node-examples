@@ -31,19 +31,16 @@ const LocationMode = azure.StorageUtilities.LocationMode;
 const container = 'customretrypolicysample';
 let blobService = null;
 
-let setRetryPolicy = () => {
+let setRetryPolicy = (container) => {
   console.log('Starting continuationSample.');
   // Step 1 : Set the retry policy to customized retry policy which will not retry
   // on any failing status code other than the excepted one.
   var retryOnContainerBeingDeleted = new RetryPolicyFilter();
   retryOnContainerBeingDeleted.retryCount = 5;
   retryOnContainerBeingDeleted.retryInterval = 5000;
-
   retryOnContainerBeingDeleted.shouldRetry = function (statusCode, retryData) {
     console.log(' Made the request at ' + new Date().toUTCString() + ', received StatusCode: ' + statusCode);
-
     retryInfo = {};
-
     // retries on any bad status code other than 409
     if (statusCode >= 300 && statusCode != 409 && statusCode != 500) {
       retryInfo.retryable = false;
@@ -173,4 +170,4 @@ function deleteContainer(callback) {
   });
 }
 
-setRetryPolicy();
+setRetryPolicy(container);
