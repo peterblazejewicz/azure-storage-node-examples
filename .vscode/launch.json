@@ -35,5 +35,13 @@
         "env": {
             "AZURE_STORAGE_CONNECTION_STRING": ""
         }
+    }, {
+        "type": "node",
+        "request": "launch",
+        "name": "retrypolicysample",
+        "program": "${workspaceRoot}/examples/retrypolicysample.js",
+        "env": {
+            "AZURE_STORAGE_CONNECTION_STRING": ""
+        }
     }]
 }

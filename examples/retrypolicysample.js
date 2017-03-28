@@ -35,20 +35,21 @@ let setRetryPolicy = (container) => {
   console.log('Starting continuationSample.');
   // Step 1 : Set the retry policy to customized retry policy which will not retry
   // on any failing status code other than the excepted one.
-  var retryOnContainerBeingDeleted = new RetryPolicyFilter();
+  let retryOnContainerBeingDeleted = new RetryPolicyFilter();
   retryOnContainerBeingDeleted.retryCount = 5;
   retryOnContainerBeingDeleted.retryInterval = 5000;
   retryOnContainerBeingDeleted.shouldRetry = function (statusCode, retryData) {
-    console.log(' Made the request at ' + new Date().toUTCString() + ', received StatusCode: ' + statusCode);
-    retryInfo = {};
+    let date = new Date().toUTCString();
+    console.log(`Made the request at ${date}, received StatusCode: ${statusCode}`);
+    let retryInfo = {};
     // retries on any bad status code other than 409
     if (statusCode >= 300 && statusCode != 409 && statusCode != 500) {
       retryInfo.retryable = false;
     } else {
-      var currentCount = (retryData && retryData.retryCount)
+      let currentCount = (retryData && retryData.retryCount)
         ? retryData.retryCount
         : 0;
-      var retryInfo = {
+      retryInfo = {
         retryInterval: this.retryInterval + 2000 * currentCount,
         retryable: currentCount < this.retryCount
       };
@@ -66,8 +67,7 @@ let setRetryPolicy = (container) => {
   };
   blobService.setProxy(proxy);*/
   // Step 2: Create the container
-  createContainer(container)
-  .then((data) => {
+  createContainer(container).then((data) => {
     console.log('Container info:');
     console.log(data.result);
     console.log(`Created the container ${data.container}`);
