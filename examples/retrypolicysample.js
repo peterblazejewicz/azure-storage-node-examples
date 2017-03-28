@@ -80,9 +80,10 @@ let setRetryPolicy = (container) => {
         // Step 5: Lease the container again, retrying until it succeeds
         leaseContainer(container).then((data) => {
           // Step 6: Delete the container
-          deleteContainer(function () {
+          deleteContainer(container).then((container) => {
+            console.log('Deleted the container ' + container);
             console.log('Ending continuationSample.');
-          });
+          }).catch((error) => console.error(error));
         }).catch((error) => console.error(error));
       }).catch((error) => console.error(error));
     }).catch((error) => console.error(error));
@@ -136,29 +137,37 @@ let leaseContainer = (container) => {
   });
 }
 
-function deleteContainer(callback) {
+function deleteContainer(container) {
   console.log('Entering deleteContainer.');
-
-  // Break the lease.
-  blobService.breakLease(container, null, {
-    leaseBreakPeriod: 0
-  }, function (error) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log(' Broke the lease on the container ' + container);
-    }
-
-    // Delete the container.
-    blobService
-      .deleteContainer(container, function (error) {
+  let serviceBreakLease = (container) => {
+    return new Promise((resolve, reject) => {
+      blobService.breakLease(container, null, {
+        leaseBreakPeriod: 0
+      }, (error, result, response) => {
         if (error) {
-          console.log(error);
+          reject(error);
         } else {
-          console.log('Deleted the container ' + container);
-          callback();
+          resolve(container);
         }
       });
+    })
+  };
+  let serviceDeleteContainer = (container) => {
+    return new Promise((resolve, reject) => {
+      // Delete the container.
+      blobService.deleteContainer(container, (error, result, response) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(container);
+        }
+      });
+    });
+  };
+  return serviceBreakLease(container)
+  .then((container) => {
+    console.log(' Broke the lease on the container ' + container);
+    return serviceDeleteContainer(container);
   });
 }
 
