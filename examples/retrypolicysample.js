@@ -75,15 +75,16 @@ let setRetryPolicy = (container) => {
     fetchAttributesContainer(container).then((container) => {
       console.log(`Downloaded container properties from ${container}`);
       // Step 4: Lease the container
-      leaseContainer(function () {
+      leaseContainer(container).then((data) => {
+        console.log(`Acquired lease from ${data.container} with leaseid ${data.result.id}`);
         // Step 5: Lease the container again, retrying until it succeeds
-        leaseContainer(function () {
+        leaseContainer(container).then((data) => {
           // Step 6: Delete the container
           deleteContainer(function () {
             console.log('Ending continuationSample.');
           });
-        });
-      });
+        }).catch((error) => console.error(error));
+      }).catch((error) => console.error(error));
     }).catch((error) => console.error(error));
   }).catch((error) => console.error(error));
 }
@@ -119,19 +120,19 @@ let fetchAttributesContainer = (container) => {
   });
 }
 
-function leaseContainer(callback) {
+let leaseContainer = (container) => {
   console.log('Entering leaseContainer.');
-
-  // Try to acquire the lease.
-  blobService.acquireLease(container, null, {
-    leaseDuration: 15
-  }, function (error, lease) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Acquired lease from ' + container + ' with leaseid' + lease.id);
-      callback();
-    }
+  return new Promise((resolve, reject) => {
+    // Try to acquire the lease.
+    blobService.acquireLease(container, null, {
+      leaseDuration: 15
+    }, (error, result, response) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve({container, result});
+      }
+    });
   });
 }
 
