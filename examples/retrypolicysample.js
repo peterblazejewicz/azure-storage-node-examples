@@ -48,42 +48,35 @@ let setRetryPolicy = (container) => {
       var currentCount = (retryData && retryData.retryCount)
         ? retryData.retryCount
         : 0;
-
       var retryInfo = {
         retryInterval: this.retryInterval + 2000 * currentCount,
         retryable: currentCount < this.retryCount
       };
     }
-
     return retryInfo;
   };
-
   blobService = azure
     .createBlobService()
     .withFilter(retryOnContainerBeingDeleted);
-
   // optionally set a proxy
   /*const proxy = {
     protocol: 'http:',
     host: '127.0.0.1',
     port: 8888
   };
-
   blobService.setProxy(proxy);*/
-
   // Step 2: Create the container
-  createContainer(function () {
-
+  createContainer(container).then((data) => {
+    console.log('Container info:');
+    console.log(data.result);
+    console.log(`Created the container ${data.container}`);
     // Step 3: Fetch attributes from the container using
     // LocationMode.SECONDARY_THEN_PRIMARY
     fetchAttributesContainer(function () {
-
       // Step 4: Lease the container
       leaseContainer(function () {
-
         // Step 5: Lease the container again, retrying until it succeeds
         leaseContainer(function () {
-
           // Step 6: Delete the container
           deleteContainer(function () {
             console.log('Ending continuationSample.');
@@ -91,22 +84,20 @@ let setRetryPolicy = (container) => {
         });
       });
     });
-  });
+  }).catch((error) => console.error(error));
 }
 
-function createContainer(callback) {
+let createContainer = (container) => {
   console.log('Entering createContainer.');
-
-  // Create the container.
-  blobService.createContainerIfNotExists(container, function (error, containerResult) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log(' Container info ');
-      console.log(containerResult);
-      console.log('Created the container ' + container);
-      callback();
-    }
+  return new Promise((resolve, reject) => {
+    // Create the container.
+    blobService.createContainerIfNotExists(container, (error, result, response) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve({container, result})
+      }
+    });
   });
 }
 
