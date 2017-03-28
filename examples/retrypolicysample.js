@@ -72,7 +72,8 @@ let setRetryPolicy = (container) => {
     console.log(`Created the container ${data.container}`);
     // Step 3: Fetch attributes from the container using
     // LocationMode.SECONDARY_THEN_PRIMARY
-    fetchAttributesContainer(function () {
+    fetchAttributesContainer(container).then((container) => {
+      console.log(`Downloaded container properties from ${container}`);
       // Step 4: Lease the container
       leaseContainer(function () {
         // Step 5: Lease the container again, retrying until it succeeds
@@ -83,7 +84,7 @@ let setRetryPolicy = (container) => {
           });
         });
       });
-    });
+    }).catch((error) => console.error(error));
   }).catch((error) => console.error(error));
 }
 
@@ -101,21 +102,20 @@ let createContainer = (container) => {
   });
 }
 
-function fetchAttributesContainer(callback) {
+let fetchAttributesContainer = (container) => {
   console.log('Entering fetchAttributesContainer.');
-
-  var options = {
-    locationMode: LocationMode.SECONDARY_THEN_PRIMARY
-  };
-
-  // Get the properties of the container.
-  blobService.getContainerProperties(container, options, function (error) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Downloaded container properties from ' + container);
-      callback();
-    }
+  return new Promise((resolve, reject) => {
+    let options = {
+      locationMode: LocationMode.SECONDARY_THEN_PRIMARY
+    };
+    // Get the properties of the container.
+    blobService.getContainerProperties(container, options, (error, result, response) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(container);
+      }
+    });
   });
 }
 
