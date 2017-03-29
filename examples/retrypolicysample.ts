@@ -41,7 +41,7 @@ let setRetryPolicy = (container) => {
   retryOnContainerBeingDeleted.shouldRetry = function (statusCode, retryData) {
     let date = new Date().toUTCString();
     console.log(`Made the request at ${date}, received StatusCode: ${statusCode}`);
-    let retryInfo = {};
+    let retryInfo: any = {};
     // retries on any bad status code other than 409
     if (statusCode >= 300 && statusCode != 409 && statusCode != 500) {
       retryInfo.retryable = false;
@@ -67,7 +67,7 @@ let setRetryPolicy = (container) => {
   };
   blobService.setProxy(proxy);*/
   // Step 2: Create the container
-  createContainer(container).then((data) => {
+  createContainer(container).then((data: any) => {
     console.log('Container info:');
     console.log(data.result);
     console.log(`Created the container ${data.container}`);
@@ -78,7 +78,7 @@ let setRetryPolicy = (container) => {
     console.log(`Downloaded container properties from ${container}`);
     // Step 4: Lease the container
     return leaseContainer(container);
-  }).then((data) => {
+  }).then((data: any) => {
     console.log(`Acquired lease from ${data.container} with leaseid ${data.result.id}`);
     // Step 5: Lease the container again, retrying until it succeeds
     return leaseContainer(data.container);

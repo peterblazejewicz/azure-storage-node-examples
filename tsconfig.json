@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "noImplicitAny": false,
+        "inlineSourceMap": true,
+        "lib": [
+            "es2017"
+        ],
+        "types": [
+            "@types/node"
+        ]
+    },
+    "include": [
+        "examples/**/*.ts"
+    ]
+}
