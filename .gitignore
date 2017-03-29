@@ -39,3 +39,5 @@ jspm_packages
 assets/download/README01.md
 assets/download/README02.md
 assets/download/updownaccesssample
+# transpiled files
+examples/**/*.js
