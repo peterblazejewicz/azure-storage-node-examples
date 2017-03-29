@@ -31,64 +31,64 @@ const LocationMode = azure.StorageUtilities.LocationMode;
 const container = 'customretrypolicysample';
 let blobService = null;
 
-let setRetryPolicy = (container) => {
-  console.log('Starting continuationSample.');
-  // Step 1 : Set the retry policy to customized retry policy which will not retry
-  // on any failing status code other than the excepted one.
-  let retryOnContainerBeingDeleted = new RetryPolicyFilter();
-  retryOnContainerBeingDeleted.retryCount = 5;
-  retryOnContainerBeingDeleted.retryInterval = 5000;
-  retryOnContainerBeingDeleted.shouldRetry = function (statusCode, retryData) {
-    let date = new Date().toUTCString();
-    console.log(`Made the request at ${date}, received StatusCode: ${statusCode}`);
-    let retryInfo: any = {};
-    // retries on any bad status code other than 409
-    if (statusCode >= 300 && statusCode != 409 && statusCode != 500) {
-      retryInfo.retryable = false;
-    } else {
-      let currentCount = (retryData && retryData.retryCount)
-        ? retryData.retryCount
-        : 0;
-      retryInfo = {
-        retryInterval: this.retryInterval + 2000 * currentCount,
-        retryable: currentCount < this.retryCount
-      };
-    }
-    return retryInfo;
-  };
-  blobService = azure
-    .createBlobService()
-    .withFilter(retryOnContainerBeingDeleted);
-  // optionally set a proxy
-  /*const proxy = {
-    protocol: 'http:',
-    host: '127.0.0.1',
-    port: 8888
-  };
-  blobService.setProxy(proxy);*/
-  // Step 2: Create the container
-  createContainer(container).then((data: any) => {
+let setRetryPolicy = async (container) => {
+  try {
+    console.log('Starting continuationSample.');
+    // Step 1 : Set the retry policy to customized retry policy which will not retry
+    // on any failing status code other than the excepted one.
+    let retryOnContainerBeingDeleted = new RetryPolicyFilter();
+    retryOnContainerBeingDeleted.retryCount = 5;
+    retryOnContainerBeingDeleted.retryInterval = 5000;
+    retryOnContainerBeingDeleted.shouldRetry = function (statusCode, retryData) {
+      let date = new Date().toUTCString();
+      console.log(`Made the request at ${date}, received StatusCode: ${statusCode}`);
+      let retryInfo : any = {};
+      // retries on any bad status code other than 409
+      if (statusCode >= 300 && statusCode != 409 && statusCode != 500) {
+        retryInfo.retryable = false;
+      } else {
+        let currentCount = (retryData && retryData.retryCount)
+          ? retryData.retryCount
+          : 0;
+        retryInfo = {
+          retryInterval: this.retryInterval + 2000 * currentCount,
+          retryable: currentCount < this.retryCount
+        };
+      }
+      return retryInfo;
+    };
+    blobService = azure
+      .createBlobService()
+      .withFilter(retryOnContainerBeingDeleted);
+    // optionally set a proxy
+    /*const proxy = {
+      protocol: 'http:',
+      host: '127.0.0.1',
+      port: 8888
+    };
+    blobService.setProxy(proxy);*/
+    let results : any;
+    // Step 2: Create the container
+    results = await createContainer(container);
     console.log('Container info:');
-    console.log(data.result);
-    console.log(`Created the container ${data.container}`);
+    console.log(results.result);
+    console.log(`Created the container ${container}`);
     // Step 3: Fetch attributes from the container using
     // LocationMode.SECONDARY_THEN_PRIMARY
-    return fetchAttributesContainer(data.container);
-  }).then((container) => {
+    results = await fetchAttributesContainer(container);
     console.log(`Downloaded container properties from ${container}`);
     // Step 4: Lease the container
-    return leaseContainer(container);
-  }).then((data: any) => {
-    console.log(`Acquired lease from ${data.container} with leaseid ${data.result.id}`);
+    results = await leaseContainer(container);
+    console.log(`Acquired lease from ${container} with leaseid ${results.result.id}`);
     // Step 5: Lease the container again, retrying until it succeeds
-    return leaseContainer(data.container);
-  }).then((data) => {
+    results = await leaseContainer(container);
     // Step 6: Delete the container
-    return deleteContainer(container);
-  }).then((container) => {
+    results = await deleteContainer(container);
     console.log('Deleted the container ' + container);
     console.log('Ending continuationSample.');
-  }).catch((error) => console.error(error));
+  } catch (error) {
+    console.error(error);
+  };
 }
 
 let createContainer = (container) => {
@@ -99,7 +99,7 @@ let createContainer = (container) => {
       if (error) {
         reject(error);
       } else {
-        resolve({container, result})
+        resolve({error, result, response})
       }
     });
   });
@@ -116,7 +116,7 @@ let fetchAttributesContainer = (container) => {
       if (error) {
         reject(error);
       } else {
-        resolve(container);
+        resolve({error, result, response});
       }
     });
   });
@@ -132,13 +132,13 @@ let leaseContainer = (container) => {
       if (error) {
         reject(error);
       } else {
-        resolve({container, result});
+        resolve({error, result, response});
       }
     });
   });
 }
 
-function deleteContainer(container) {
+let deleteContainer = (container) => {
   console.log('Entering deleteContainer.');
   let serviceBreakLease = (container) => {
     return new Promise((resolve, reject) => {
@@ -160,7 +160,7 @@ function deleteContainer(container) {
         if (error) {
           reject(error);
         } else {
-          resolve(container);
+          resolve({error, result, response});
         }
       });
     });
