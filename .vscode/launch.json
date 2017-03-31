@@ -14,7 +14,8 @@
         "args": [
             "${workspaceRoot}/assets/upload",
             "${workspaceRoot}/assets/download"
-        ]
+        ],
+        "preLaunchTask": "tsc"
     }, {
         "type": "node",
         "request": "launch",
@@ -26,7 +27,8 @@
         "args": [
             "51",
             "10"
-        ]
+        ],
+        "preLaunchTask": "tsc"
     }, {
         "type": "node",
         "request": "launch",
@@ -34,7 +36,8 @@
         "program": "${workspaceRoot}/examples/requestresponseeventssample.js",
         "env": {
             "AZURE_STORAGE_CONNECTION_STRING": ""
-        }
+        },
+        "preLaunchTask": "tsc"
     }, {
         "type": "node",
         "request": "launch",
