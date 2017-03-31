@@ -21,8 +21,7 @@
 * 3. Demonstrate making requests using AccessConditions.
 */
 
-const fs = require('fs');
-
+import * as fs from 'fs';
 const azure = require('azure-storage');
 
 const container = 'updownsample3';
@@ -80,7 +79,7 @@ let uploadSample = () => {
   });
 }
 
-let createContainer = (container) => {
+const createContainer = (container) => {
   return new Promise((resolve, reject) => {
     // Create the container.
     blobService.createContainerIfNotExists(container, (error) => {
@@ -223,7 +222,7 @@ let listDirectory = (dir) => {
   });
 }
 
-let getFileStat = (file) => {
+let getFileStat = (file: string) => {
   return new Promise((resolve, reject) => {
     fs
       .stat(file, function (error, stat) {
@@ -237,10 +236,10 @@ let getFileStat = (file) => {
 }
 
 let listAllFiles = (dir) => {
-  return listDirectory(dir).then((files) => {
+  return listDirectory(dir).then((files: string[]) => {
     return Promise.all(files.map((file) => {
       file = dir + '/' + file;
-      return getFileStat(file).then((stat) => {
+      return getFileStat(file).then((stat: fs.Stats) => {
         if (stat.isDirectory()) {
           return listAllFiles(file);
         } else {

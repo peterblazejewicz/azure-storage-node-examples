@@ -17,7 +17,7 @@
 /**
 * Demonstrates how to define sendingrequest and receivedresponse event handlers.
 */
-const fs = require('fs');
+import * as fs from 'fs';
 const azure = require('azure-storage');
 const container = 'sendingrequestevent3';
 // The service object which will define the event handlers

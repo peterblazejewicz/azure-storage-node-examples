@@ -23,7 +23,7 @@
 * sent if users immediately recreate a container after delete it.
 */
 
-const fs = require('fs');
+import * as fs from 'fs';
 const azure = require('azure-storage')
 
 const RetryPolicyFilter = azure.RetryPolicyFilter;

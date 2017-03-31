@@ -1,4 +1,5 @@
-﻿//
+﻿import { CompleterResult } from 'readline';
+//
 // Copyright (c) Microsoft and contributors.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -31,7 +32,7 @@
 *
 */
 
-const fs = require('fs');
+import * as fs from 'fs';
 const azure = require('azure-storage');
 
 const container = 'paginationsample';
@@ -40,6 +41,11 @@ const blob = 'contsample';
 const blobService = azure
   .createBlobService()
   .withFilter(new azure.ExponentialRetryPolicyFilter());
+
+interface IResultsContainer {
+  result: any,
+  container: string
+}
 
 // optionally set a proxy
 /*let proxy = {
@@ -62,12 +68,12 @@ let continuationSample = (container, blob) => {
   let pageSize = parseInt(processArguments[3], 10);
   console.log('Starting continuationSample.');
   // Create the container
-  createContainer(container).then((results) => {
+  createContainer(container).then((results: IResultsContainer) => {
     console.log(`Created the container ${results.container}`);
     // Upload blobs from text.
     console.log('Entering createBlobs.');
     return createBlobs(results.container, blob, totalBlobsCount);
-  }).then((results) => {
+  }).then((results: IResultsContainer) => {
     let options = {
       maxResults: pageSize,
       include: 'metadata',
@@ -76,11 +82,11 @@ let continuationSample = (container, blob) => {
     console.log('Entering listBlobs.');
     // List blobs using continuation tokens.
     return getAllBlobs(results.container, options);
-  }).then((blobs) => {
+  }).then((blobs: any[]) => {
     console.log(`Completed listing. There are ${blobs.length} blobs`);
     // Delete the container
     return deleteContainer(container);
-  }).then((results) => console.log(`Deleted the container ${results.container}`))
+  }).then((results: IResultsContainer) => console.log(`Deleted the container ${results.container}`))
   .catch((error) => console.error(error));
 }
 
