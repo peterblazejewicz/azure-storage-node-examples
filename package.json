@@ -5,10 +5,10 @@
   "main": "index.js",
   "private": true,
   "dependencies": {
-    "azure-storage": "^2.1.0"
+    "azure-storage": "~2.6.0"
   },
   "devDependencies": {
-    "@types/node": "^7.0.12"
+    "@types/node": "~8.0.53"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
