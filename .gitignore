@@ -41,3 +41,6 @@ assets/download/README02.md
 assets/download/updownaccesssample
 # transpiled files
 examples/**/*.js
+
+# environment 
+.env
