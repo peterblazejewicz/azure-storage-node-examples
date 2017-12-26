@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es5",
-        "noImplicitAny": false,
-        "inlineSourceMap": true,
+        "target": "es6",
+        "sourceMap": true,
+        "noImplicitAny": true,
         "lib": [
             "es2017"
         ],
         "types": [
-            "@types/node"
+            "@types/node",
+            "azure-storage"
         ],
         "moduleResolution": "node"
     },

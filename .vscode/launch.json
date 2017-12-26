@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "blobuploaddownloadsample",
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
+        "runtimeArgs": [
+          "${workspaceFolder}/examples/samples/blobuploaddownloadsample.ts",
+          "source",
+          "dest"
+        ],
+        "cwd": "${workspaceFolder}",
+        "protocol": "inspector"
+      }
+    ]
+}
