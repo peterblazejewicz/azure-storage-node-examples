@@ -71,7 +71,7 @@ const uploadSample = async () => {
     // blob container to a given destination directory.
     await downloadBlobs(container, destPath);
     // Demonstrate making requests using AccessConditions.
-    //await useAccessCondition(container);
+    await useAccessCondition(container);
     // Delete the container
     console.log('Delete the container');
     await deleteContainer(container);
@@ -248,4 +248,79 @@ const getBlobToLocalFile = (
     );
   });
 };
+
+/**
+ * Async wrapper for {BlobService.createBlockBlobFromText}
+ *
+ * @param {string} container
+ * @param {string} blobAccess
+ * @param {string} text
+ * @param {BlobService.CreateBlobRequestOptions} [options={}]
+ * @returns {Promise<BlobService.BlobResult>}
+ */
+const createBlockBlobFromTextAsync = (
+  container: string,
+  blobAccess: string,
+  text: string,
+  options: BlobService.CreateBlobRequestOptions = {},
+): Promise<BlobService.BlobResult> => {
+  return new Promise((resolve, reject) => {
+    blobService.createBlockBlobFromText(
+      container,
+      blobAccess,
+      text,
+      options,
+      (error, results) => (error ? reject(error) : resolve(results)),
+    );
+  });
+};
+
+/**
+ * Async wrapper
+ *
+ * @param {string} container
+ * @returns {Promise<{}>}
+ */
+const useAccessCondition = async (container: string): Promise<{}> => {
+  return new Promise(async (resolve, reject) => {
+    console.log('Entering useAccessCondition.');
+    let blobInformation = await createBlockBlobFromTextAsync(
+      container,
+      blobAccess,
+      'hello',
+    );
+    console.log(`Created the blob ${blobInformation.name}`);
+    console.log(`Blob Etag is: ${blobInformation.etag}`);
+    // Use the If-not-match ETag condition to access the blob. By
+    // using the IfNoneMatch condition we are asserting that the blob needs
+    // to have been modified in order to complete the request. In this
+    // sample no other client is accessing the blob, so this will fail as
+    // expected.
+    const options: BlobService.CreateBlobRequestOptions = {
+      accessConditions: { EtagNonMatch: blobInformation.etag },
+    };
+    try {
+      blobInformation = await createBlockBlobFromTextAsync(
+        container,
+        blobInformation.name,
+        'new hello',
+        options,
+      );
+      console.log('Blob was incorrectly updated');
+      reject('Blob was incorrectly updated');
+    } catch (error) {
+      if (error.statusCode === 412 && error.code === 'ConditionNotMet') {
+        console.log(
+          `Attempted to recreate the blob with the if-none-match
+          access condition and got the expected exception.`,
+        );
+        resolve();
+      } else {
+        reject(error);
+      }
+    }
+  });
+};
+
+//
 uploadSample();
