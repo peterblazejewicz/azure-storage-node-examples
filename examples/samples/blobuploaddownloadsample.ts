@@ -28,10 +28,11 @@ import * as fs from 'fs';
 import * as azure from 'azure-storage';
 import { ErrorOrResult, BlobService } from 'azure-storage';
 
-const [readDirAsync, stAsync, existsAsync] = [
+const [readDirAsync, stAsync, existsAsync, mkdirAsync] = [
   fs.readdir,
   fs.stat,
   fs.exists,
+  fs.mkdir,
 ].map(f => promisify(f));
 
 const container = 'updownsample3',
@@ -66,6 +67,11 @@ const uploadSample = async () => {
     await createContainer(container);
     // upload all files
     await uploadBlobs(srcPath, container);
+    // Demonstrates how to download all files from a given
+    // blob container to a given destination directory.
+    await downloadBlobs(container, destPath);
+    // Demonstrate making requests using AccessConditions.
+    //await useAccessCondition(container);
     // Delete the container
     console.log('Delete the container');
     await deleteContainer(container);
@@ -137,8 +143,6 @@ const createBlockBlobFromLocalFileAsync = (
   });
 };
 /**
- *
- *
  * @param {string} srcPath
  * @returns
  */
@@ -158,103 +162,90 @@ const getFiles = async (srcPath: string) => {
   return files;
 };
 
-uploadSample();
-/*
-function uploadSample() {
+/**
+ * - create download directory (if not exists)
+ * - gets information about blob
+ * - for each blob downloads a blob to local file
+ *
+ * @param {string} containerName
+ * @param {string} destinationDirectoryPath
+ */
+const downloadBlobs = async (
+  containerName: string,
+  destinationDirectoryPath: string,
+) => {
+  console.log('Entering downloadBlobs.');
+  // Validate directory
+  if ((await existsAsync(destinationDirectoryPath)) === false) {
+    console.log(
+      `${destinationDirectoryPath} does not exist. Attempting to create this directory...`,
+    );
+    await mkdirAsync(destinationDirectoryPath);
+    console.log(`${destinationDirectoryPath} created.`);
+  } else {
+    console.log(`Directory ${destinationDirectoryPath} already exists`);
+  }
+  let results = await listBlobsSegmentedAsync(containerName);
+  const blobs = results.entries;
+  for (let blob of blobs) {
+    await getBlobToLocalFile(
+      container,
+      blob.name,
+      `${destinationDirectoryPath}/${blob.name}`,
+    );
+  }
+  console.log('All files downloaded');
+  //
+};
 
-
-  // Create the container
-  createContainer(container, function () {
-
-    // Demonstrates how to upload all files from a given directoy
-    uploadBlobs(srcPath, container, function () {
-
-      // Demonstrates how to download all files from a given
-      // blob container to a given destination directory.
-      downloadBlobs(container, destPath, function () {
-
-        // Demonstrate making requests using AccessConditions.
-        useAccessCondition(container, function () {
-
-          // Delete the container
-          deleteContainer(container, function () {
-            console.log('Ending blobuploaddownloadsample.');
-          });
-        });
-      });
+/**
+ * Returns information about blob
+ * @param {string} container
+ * @returns {Promise<BlobService.ListBlobsResult>}
+ */
+const listBlobsSegmentedAsync = (
+  container: string,
+): Promise<BlobService.ListBlobsResult> => {
+  console.log('listBlobsSegmentedAsync');
+  return new Promise((resolve, reject) => {
+    // NOTE: does not handle pagination.
+    blobService.listBlobsSegmented(container, null, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
     });
   });
-}
+};
 
-
-function downloadBlobs(containerName, destinationDirectoryPath, callback) {
-  console.log('Entering downloadBlobs.');
-
-  // Validate directory
-  if (!fs.existsSync(destinationDirectoryPath)) {
-    console.log(destinationDirectoryPath + ' does not exist. Attempting to create this directory...');
-    fs.mkdirSync(destinationDirectoryPath);
-    console.log(destinationDirectoryPath + ' created.');
-  }
-
-  // NOTE: does not handle pagination.
-  blobService.listBlobsSegmented(containerName, null, function (error, result) {
-    if (error) {
-      console.log(error);
-    } else {
-      var blobs = result.entries;
-      var blobsDownloaded = 0;
-
-      blobs.forEach(function (blob) {
-          blobService.getBlobToLocalFile(containerName, blob.name, destinationDirectoryPath + '/' + blob.name, function (error2) {
-          blobsDownloaded++;
-
-          if (error2) {
-            console.log(error2);
-          } else {
-            console.log(' Blob ' + blob.name + ' download finished.');
-
-            if (blobsDownloaded === blobs.length) {
-              // Wait until all workers complete and the blobs are downloaded
-              console.log('All files downloaded');
-              callback();
-            }
-          }
-        });
-      });
-    }
-  });
-}
-
-function useAccessCondition(containerName, callback) {
-  console.log('Entering useAccessCondition.');
-
-  // Create a blob.
-  blobService.createBlockBlobFromText(containerName, blobAccess, 'hello', function (error, blobInformation) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log(' Created the blob ' + blobInformation.name);
-      console.log(' Blob Etag is: ' + blobInformation.etag);
-
-      // Use the If-not-match ETag condition to access the blob. By
-      // using the IfNoneMatch condition we are asserting that the blob needs
-      // to have been modified in order to complete the request. In this
-      // sample no other client is accessing the blob, so this will fail as
-      // expected.
-      var options = { accessConditions: { EtagNonMatch: blobInformation.etag} };
-      blobService.createBlockBlobFromText(containerName, blobInformation.name, 'new hello', options, function (error2) {
-        if (error2 && error2.statusCode === 412 && error2.code === 'ConditionNotMet') {
-          console.log('Attempted to recreate the blob with the if-none-match access condition and got the expected exception.');
-          callback();
+/**
+ * Asynchronously downloads a blob file to local file
+ * @param {string} container
+ * @param {string} blobName
+ * @param {string} path
+ * @returns {Promise<BlobService.BlobResult>}
+ */
+const getBlobToLocalFile = (
+  container: string,
+  blobName: string,
+  path: string,
+): Promise<BlobService.BlobResult> => {
+  console.log('getBlobToLocalFile');
+  return new Promise((resolve, reject) => {
+    blobService.getBlobToLocalFile(
+      container,
+      blobName,
+      path,
+      (error, results) => {
+        if (error) {
+          reject(error);
         } else {
-          console.log(' Blob was incorrectly updated');
-          if (error2) {
-            console.log(error2);
-          }
+          console.log(`Blob ${blobName} download finished.`);
+          resolve(results);
         }
-      });
-    }
+      },
+    );
   });
-}
-*/
+};
+uploadSample();
