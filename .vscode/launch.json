@@ -9,8 +9,8 @@
         "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
         "runtimeArgs": [
           "${workspaceFolder}/examples/samples/blobuploaddownloadsample.ts",
-          "${workspaceFolder}/assets/",
-          "dest"
+          "${workspaceFolder}/assets/uploads",
+          "${workspaceFolder}/assets/dest"
         ],
         "cwd": "${workspaceFolder}",
         "protocol": "inspector"
