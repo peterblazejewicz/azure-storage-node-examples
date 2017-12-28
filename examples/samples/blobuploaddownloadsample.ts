@@ -40,11 +40,11 @@ const container = 'updownsample3',
   blob = 'updownsample',
   blobAccess = 'updownaccesssample';
 
-const blobService = azure
-  .createBlobService()
-  .withFilter(new azure.ExponentialRetryPolicyFilter());
-
-const asyncBlobService = new BlobServiceAsyncApi(blobService);
+const asyncBlobService = new BlobServiceAsyncApi(
+  azure
+    .createBlobService()
+    .withFilter(new azure.ExponentialRetryPolicyFilter()),
+);
 
 // optionally set a proxy
 /*var proxy = {
