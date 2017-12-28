@@ -44,4 +44,18 @@ export default class BlobServiceAsyncApi {
       );
     });
   };
+
+  // NOTE: does not handle pagination.
+  listBlobsSegmented = (
+    container: string,
+  ): Promise<BlobService.ListBlobsResult> => {
+    console.log('listBlobsSegmentedAsync');
+    return new Promise((resolve, reject) => {
+      this.blobService.listBlobsSegmented(
+        container,
+        null,
+        (error, result, response) => (error ? reject(error) : resolve(result)),
+      );
+    });
+  };
 }

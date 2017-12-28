@@ -149,7 +149,7 @@ const downloadBlobs = async (
   } else {
     console.log(`Directory ${destinationDirectoryPath} already exists`);
   }
-  let results = await listBlobsSegmentedAsync(containerName);
+  let results = await asyncBlobService.listBlobsSegmented(containerName);
   const blobs = results.entries;
   for (let blob of blobs) {
     await getBlobToLocalFile(
@@ -167,21 +167,6 @@ const downloadBlobs = async (
  * @param {string} container
  * @returns {Promise<BlobService.ListBlobsResult>}
  */
-const listBlobsSegmentedAsync = (
-  container: string,
-): Promise<BlobService.ListBlobsResult> => {
-  console.log('listBlobsSegmentedAsync');
-  return new Promise((resolve, reject) => {
-    // NOTE: does not handle pagination.
-    blobService.listBlobsSegmented(container, null, (error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-};
 
 /**
  * Asynchronously downloads a blob file to local file
