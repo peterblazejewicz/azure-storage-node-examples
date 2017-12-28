@@ -27,13 +27,13 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as azure from 'azure-storage';
 import { ErrorOrResult, BlobService } from 'azure-storage';
-
-const [readDirAsync, stAsync, existsAsync, mkdirAsync] = [
-  fs.readdir,
-  fs.stat,
-  fs.exists,
-  fs.mkdir,
-].map(f => promisify(f));
+import {
+  existsAsync,
+  mkdirAsync,
+  readDirAsync,
+  stAsync,
+} from './../utils/promisified';
+import BlobServiceAsyncApi from '../utils/blob-service-async';
 
 const container = 'updownsample3',
   blob = 'updownsample',
@@ -42,6 +42,8 @@ const container = 'updownsample3',
 const blobService = azure
   .createBlobService()
   .withFilter(new azure.ExponentialRetryPolicyFilter());
+
+const asyncBlobService = new BlobServiceAsyncApi(blobService);
 
 // optionally set a proxy
 /*var proxy = {
@@ -64,7 +66,7 @@ const uploadSample = async () => {
   try {
     // Create the container
     console.log('Create the container');
-    await createContainer(container);
+    await asyncBlobService.createContainerIfNotExists(container);
     // upload all files
     await uploadBlobs(srcPath, container);
     // Demonstrates how to download all files from a given
@@ -74,30 +76,12 @@ const uploadSample = async () => {
     await useAccessCondition(container);
     // Delete the container
     console.log('Delete the container');
-    await deleteContainer(container);
+    await asyncBlobService.deleteContainerIfExists(container);
   } catch (error) {
     console.error(error);
   }
 };
 
-// Create the container
-const createContainer = async (container: string) => {
-  return new Promise<string>((resolve, reject) =>
-    blobService.createContainerIfNotExists(
-      container,
-      error => (error ? reject(error) : resolve()),
-    ),
-  );
-};
-// Delete the container
-const deleteContainer = async (container: string) => {
-  return new Promise((resolve, reject) =>
-    blobService.deleteContainerIfExists(
-      container,
-      error => (error ? reject(error) : resolve()),
-    ),
-  );
-};
 // Demonstrates how to upload all files from a given directory
 const uploadBlobs = async (srcPath: string, container: string) => {
   return new Promise(async (resolve, reject) => {

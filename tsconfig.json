@@ -11,7 +11,9 @@
             "@types/node",
             "azure-storage"
         ],
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "examples/**/*.ts"
