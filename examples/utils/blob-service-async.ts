@@ -45,7 +45,12 @@ export default class BlobServiceAsyncApi {
     });
   };
 
-  // NOTE: does not handle pagination.
+  /**
+   * Returns information about blob
+   * NOTE: does not handle pagination.
+   * @param {string} container
+   * @returns {Promise<BlobService.ListBlobsResult>}
+   */
   listBlobsSegmented = (
     container: string,
   ): Promise<BlobService.ListBlobsResult> => {
@@ -55,6 +60,36 @@ export default class BlobServiceAsyncApi {
         container,
         null,
         (error, result, response) => (error ? reject(error) : resolve(result)),
+      );
+    });
+  };
+
+  /**
+   * Asynchronously downloads a blob file to local file
+   * @param {string} container
+   * @param {string} blobName
+   * @param {string} path
+   * @returns {Promise<BlobService.BlobResult>}
+   */
+  getBlobToLocalFile = (
+    container: string,
+    blobName: string,
+    path: string,
+  ): Promise<BlobService.BlobResult> => {
+    console.log('getBlobToLocalFile');
+    return new Promise((resolve, reject) => {
+      this.blobService.getBlobToLocalFile(
+        container,
+        blobName,
+        path,
+        (error, results) => {
+          if (error) {
+            reject(error);
+          } else {
+            console.log(`Blob ${blobName} download finished.`);
+            resolve(results);
+          }
+        },
       );
     });
   };

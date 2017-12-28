@@ -152,7 +152,7 @@ const downloadBlobs = async (
   let results = await asyncBlobService.listBlobsSegmented(containerName);
   const blobs = results.entries;
   for (let blob of blobs) {
-    await getBlobToLocalFile(
+    await asyncBlobService.getBlobToLocalFile(
       container,
       blob.name,
       `${destinationDirectoryPath}/${blob.name}`,
@@ -160,42 +160,6 @@ const downloadBlobs = async (
   }
   console.log('All files downloaded');
   //
-};
-
-/**
- * Returns information about blob
- * @param {string} container
- * @returns {Promise<BlobService.ListBlobsResult>}
- */
-
-/**
- * Asynchronously downloads a blob file to local file
- * @param {string} container
- * @param {string} blobName
- * @param {string} path
- * @returns {Promise<BlobService.BlobResult>}
- */
-const getBlobToLocalFile = (
-  container: string,
-  blobName: string,
-  path: string,
-): Promise<BlobService.BlobResult> => {
-  console.log('getBlobToLocalFile');
-  return new Promise((resolve, reject) => {
-    blobService.getBlobToLocalFile(
-      container,
-      blobName,
-      path,
-      (error, results) => {
-        if (error) {
-          reject(error);
-        } else {
-          console.log(`Blob ${blobName} download finished.`);
-          resolve(results);
-        }
-      },
-    );
-  });
 };
 
 /**
