@@ -93,7 +93,7 @@ const uploadBlobs = async (srcPath: string, container: string) => {
       const files: string[] = await getFiles(srcPath);
       for (let file of files) {
         const blobName = file.replace(/^.*[\\\/]/, '');
-        const results = await createBlockBlobFromLocalFileAsync(
+        const results = await asyncBlobService.createBlockBlobFromLocalFile(
           container,
           blobName,
           file,
@@ -106,26 +106,6 @@ const uploadBlobs = async (srcPath: string, container: string) => {
   });
 };
 
-const createBlockBlobFromLocalFileAsync = (
-  container: string,
-  blobName: string,
-  file: string,
-): Promise<BlobService.BlobResult> => {
-  return new Promise((resolve, reject) => {
-    blobService.createBlockBlobFromLocalFile(
-      container,
-      blobName,
-      file,
-      (error: Error, result: BlobService.BlobResult) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      },
-    );
-  });
-};
 /**
  * @param {string} srcPath
  * @returns

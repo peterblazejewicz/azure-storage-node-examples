@@ -23,4 +23,25 @@ export default class BlobServiceAsyncApi {
       ),
     );
   };
+
+  createBlockBlobFromLocalFile = async (
+    container: string,
+    blobName: string,
+    file: string,
+  ) => {
+    return new Promise<BlobService.BlobResult>((resolve, reject) => {
+      this.blobService.createBlockBlobFromLocalFile(
+        container,
+        blobName,
+        file,
+        (error: Error, result: BlobService.BlobResult) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        },
+      );
+    });
+  };
 }
