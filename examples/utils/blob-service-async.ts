@@ -93,4 +93,30 @@ export default class BlobServiceAsyncApi {
       );
     });
   };
+
+  /**
+   * Async wrapper for {BlobService.createBlockBlobFromText}
+   *
+   * @param {string} container
+   * @param {string} blobAccess
+   * @param {string} text
+   * @param {BlobService.CreateBlobRequestOptions} [options={}]
+   * @returns {Promise<BlobService.BlobResult>}
+   */
+  createBlockBlobFromText = (
+    container: string,
+    blobAccess: string,
+    text: string,
+    options: BlobService.CreateBlobRequestOptions = {},
+  ): Promise<BlobService.BlobResult> => {
+    return new Promise((resolve, reject) => {
+      this.blobService.createBlockBlobFromText(
+        container,
+        blobAccess,
+        text,
+        options,
+        (error, results) => (error ? reject(error) : resolve(results)),
+      );
+    });
+  };
 }

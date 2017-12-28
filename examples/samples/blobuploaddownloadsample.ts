@@ -163,32 +163,6 @@ const downloadBlobs = async (
 };
 
 /**
- * Async wrapper for {BlobService.createBlockBlobFromText}
- *
- * @param {string} container
- * @param {string} blobAccess
- * @param {string} text
- * @param {BlobService.CreateBlobRequestOptions} [options={}]
- * @returns {Promise<BlobService.BlobResult>}
- */
-const createBlockBlobFromTextAsync = (
-  container: string,
-  blobAccess: string,
-  text: string,
-  options: BlobService.CreateBlobRequestOptions = {},
-): Promise<BlobService.BlobResult> => {
-  return new Promise((resolve, reject) => {
-    blobService.createBlockBlobFromText(
-      container,
-      blobAccess,
-      text,
-      options,
-      (error, results) => (error ? reject(error) : resolve(results)),
-    );
-  });
-};
-
-/**
  * Async wrapper
  *
  * @param {string} container
@@ -197,7 +171,7 @@ const createBlockBlobFromTextAsync = (
 const useAccessCondition = async (container: string): Promise<{}> => {
   return new Promise(async (resolve, reject) => {
     console.log('Entering useAccessCondition.');
-    let blobInformation = await createBlockBlobFromTextAsync(
+    let blobInformation = await asyncBlobService.createBlockBlobFromText(
       container,
       blobAccess,
       'hello',
@@ -213,7 +187,7 @@ const useAccessCondition = async (container: string): Promise<{}> => {
       accessConditions: { EtagNonMatch: blobInformation.etag },
     };
     try {
-      blobInformation = await createBlockBlobFromTextAsync(
+      blobInformation = await asyncBlobService.createBlockBlobFromText(
         container,
         blobInformation.name,
         'new hello',
